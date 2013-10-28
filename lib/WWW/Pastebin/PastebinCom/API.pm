@@ -2,7 +2,7 @@ package WWW::Pastebin::PastebinCom::API;
 
 use strict;
 use warnings;
-our $VERSION = '0.001';
+our $VERSION = '0.002';
 use LWP::UserAgent;
 use Carp;
 use HTTP::Cookies;
@@ -23,7 +23,7 @@ use overload q|""| => sub {
 
 sub new {
     my $class = shift;
-    croak "Must have even number of arguments to the constructor"
+    croak 'Must have even number of arguments to the constructor'
         if @_ & 1;
 
     my %args = @_;
@@ -48,6 +48,39 @@ sub new {
     return $self;
 }
 
+sub get_user_info {
+    my $self = shift;
+    $self->error( undef );
+
+    my $api_key = $self->_get_api_key
+        or return $self->_set_error(q|Missing API key|);
+
+    my $user_key = $self->_get_user_key
+        or return $self->_set_error(
+            q|Missing USER key. See ->get_user_key() method|
+        );
+
+    my $response = $self->_ua->post(
+        'http://pastebin.com/api/api_post.php',
+        {
+            api_dev_key         => $api_key,
+            api_user_key        => $user_key,
+            api_option          => 'userdetails',
+        },
+    );
+
+    if ( $response->is_success or $response->is_redirect ) {
+        return $self->_set_error( $response->content )
+            if $response->content =~ /^Bad API request/;
+
+        return $self->_parse_user_xml( $response->content );
+    }
+    else {
+        $self->error( $response->status_line );
+        return;
+    }
+}
+
 sub list_user_pastes {
     my $self = shift;
     my $limit = shift || 50;
@@ -56,11 +89,19 @@ sub list_user_pastes {
 
     $self->error( undef );
 
+    my $api_key = $self->_get_api_key
+        or return $self->_set_error(q|Missing API key|);
+
+    my $user_key = $self->_get_user_key
+        or return $self->_set_error(
+            q|Missing USER key. See ->get_user_key() method|
+        );
+
     my $response = $self->_ua->post(
         'http://pastebin.com/api/api_post.php',
         {
-            api_dev_key         => $self->_get_api_key,
-            api_user_key        => $self->_get_user_key,
+            api_dev_key         => $api_key,
+            api_user_key        => $user_key,
             api_results_limit   => $limit,
             api_option          => 'list',
         },
@@ -86,10 +127,13 @@ sub list_trends {
 
     $self->error( undef );
 
+    my $api_key = $self->_get_api_key
+        or return $self->_set_error(q|Missing API key|);
+
     my $response = $self->_ua->post(
         'http://pastebin.com/api/api_post.php',
         {
-            api_dev_key         => $self->_get_api_key,
+            api_dev_key         => $api_key,
             api_option          => 'trends',
         },
     );
@@ -117,12 +161,20 @@ sub delete_paste {
 
     $self->error( undef );
 
+    my $api_key = $self->_get_api_key
+        or return $self->_set_error(q|Missing API key|);
+
+    my $user_key = $self->_get_user_key
+        or return $self->_set_error(
+            q|Missing USER key. See ->get_user_key() method|
+        );
+
     my $response = $self->_ua->post(
         'http://pastebin.com/api/api_post.php',
         {
             # mandatory API keys
-            api_dev_key         => $self->_get_api_key,
-            api_user_key        => $self->_get_user_key,
+            api_dev_key         => $api_key,
+            api_user_key        => $user_key,
             api_paste_key       => $paste_key,
             api_option          => 'delete',
         },
@@ -184,7 +236,7 @@ sub get_paste {
         return $response->content;
     }
     else {
-        if ( $response->status_line('404 Not Found') ) {
+        if ( $response->status_line eq '404 Not Found' ) {
             $self->error(q|This paste doesn't exist|);
         }
         else {
@@ -210,11 +262,14 @@ sub paste {
     my @args = $self->_prepare_optional_api_options( \%args )
         or return;
 
+    my $api_key = $self->_get_api_key
+        or return $self->_set_error(q|Missing API key|);
+
     my $response = $self->_ua->post(
         'http://pastebin.com/api/api_post.php',
         {
             # mandatory API keys
-            api_dev_key    => $self->_get_api_key,
+            api_dev_key    => $api_key,
             api_option     => 'paste',
             api_paste_code => $paste_text,
 
@@ -240,10 +295,13 @@ sub get_user_key {
     $self->error( undef );
     $self->user_key( undef );
 
+    my $api_key = $self->_get_api_key
+        or return $self->_set_error(q|Missing API key|);
+
     my $response = $self->_ua->post(
         'http://pastebin.com/api/api_login.php',
         {
-            api_dev_key         => $self->_get_api_key,
+            api_dev_key         => $api_key,
             api_user_name       => $login,
             api_user_password   => $pass,
         },
@@ -261,6 +319,25 @@ sub get_user_key {
     }
 }
 
+sub _parse_user_xml {
+    my ( $self, $content ) = @_;
+
+    $content =~ s{<user>\s*(.+)\s*</user>}{$1}gs;
+
+    my %user = $content =~ ( m{<([^>]+)>(.*?)</\1>}sg );
+    $user{ substr $_, 5 } = delete $user{ $_ } for keys %user;
+    if ( $user{private} == 2 ) {
+        $user{private} = 1
+    }
+    elsif ( $user{private} == 1 ) {
+        $user{unlisted} = 1;
+    }
+    else {
+        delete $user{private};
+    }
+
+    return wantarray ? %user : \%user;
+}
 
 sub _parse_xml {
     my ( $self, $content ) = @_;
@@ -718,6 +795,26 @@ WWW::Pastebin::PastebinCom::API - implementation of pastebin.com API
     use Data::Dumper;
     print Dumper $pastes;
 
+
+    ##### List user's info
+
+    my $bin = WWW::Pastebin::PastebinCom::API->new(
+        api_key => 'a3767061e0e64fef6c266126f7e588f4',
+    );
+
+    $bin->get_user_key(qw/
+        your_pastebin.com_login
+        your_pastebin.com_password
+    /) or die "$bin";
+
+    my $info = $bin->get_user_info
+        or die "$bin";
+
+    use Data::Dumper;
+    print Dumper $info;
+
+
+
 =head1 DESCRIPTION
 
 This module is an implementation of the pastebin.com API
@@ -726,6 +823,13 @@ unlisted, and private pastes; deletion of private pastes;
 listing of trending pastes and private pastes; and retrieval
 of a paste's raw content (the last one is not part of the API, but
 is nevertheless implemented in this module).
+
+B<NOTE ON GETTING PASTES:> Despite tons of patently useless stuff
+the API provides, it doesn't offer anything but the raw contents
+of the paste (not even that, if we're to get technical). If your
+main aim is to B<retrieve> pastes and/or retrieve info about
+pastes (e.g. expiry date, highlight, etc), then this module will not
+help you. See L<WWW::Pastebin::PastebinCom::Retrieve> for that task.
 
 =head1 API KEY NEEDED
 
@@ -1323,7 +1427,11 @@ indirectly by calling C<< ->get_user_key() >> method.
     use Data::Dumper;
     print Dumper $pastes;
 
-Lists user's private pastes. B<Takes> one optional argument as a
+Lists user's private pastes. Prior to calling C<< ->list_user_pastes() >>
+C<< ->user_key() >> must be set, either
+by calling C<< ->get_user_key() >>, using C<< ->user_key() >>
+accessor method, or C<user_key> constructor argument.
+B<Takes> one optional argument as a
 positive integer between 1 and 1000, which specifies the
 maximum number of pastes to retrieve. B<By default> will get
 at most 50 pastes. B<On failure> returns either
@@ -1443,6 +1551,118 @@ represents information about a single paste. The format
 of the hashref is the same as for hashrefs returned by the
 C<< ->list_user_pastes() >> method (see above). The only exception
 is that C<private> key will not be there.
+
+=head2 C<get_user_info>
+
+    my $bin = WWW::Pastebin::PastebinCom::API->new(
+        api_key => 'a3767061e0e64fef6c266126f7e588f4',
+    );
+
+    $bin->get_user_key(qw/
+        your_pastebin.com_login
+        your_pastebin.com_password
+    /) or die "$bin";
+
+    my $info = $bin->get_user_info
+        or die "$bin";
+
+    use Data::Dumper;
+    print Dumper $info;
+
+List user's account info. Prior to calling C<< ->get_user_info() >>
+C<< ->user_key() >> must be set, either
+by calling C<< ->get_user_key() >>, using C<< ->user_key() >>
+accessor method, or C<user_key> constructor argument. B<Takes>
+no arguments. B<On failure> returns either
+C<undef> or an empty list, depending on the context, and the
+C<< ->error() >> accessor method will contain human-readable
+error message. B<On success> either a hashref or a key/value list,
+depending on the context. The format of the hashref is this:
+
+    {
+        'name' => 'zoffixisawesome',
+        'website' => 'http://zoffix.com',
+        'location' => 'Toronto',
+        'format_short' => 'perl',
+        'avatar_url' => 'http://pastebin.com/i/guest.gif',
+        'private' => '1',  # also possible for this to be unlisted => 1 instead
+        'email' => 'cpan@zoffix.com',
+        'expiration' => 'N',
+        'account_type' => '0'
+    }
+
+The API is not too descriptive about
+the values of the user info, so what follows is my interpretation:
+
+=head3 C<name>
+
+    'name' => 'zoffixisawesome',
+
+A string of text. User's login.
+
+=head3 C<email>
+
+    'email' => 'cpan@zoffix.com',
+
+A string of text. User's email address.
+
+=head3 C<website>
+
+    'website' => 'http://zoffix.com',
+
+A string of text. The website the user specified in their profile.
+
+=head3 C<location>
+
+    'location' => 'Toronto',
+
+A string of text. User's location (specified by the user manually
+by them in their profile).
+
+=head3 C<format_short>
+
+    'format_short' => 'perl',
+
+This is the code for user's default syntax highlighting. See the left
+column in the C<format> argument to C<< ->paste() >> method.
+
+=head3 C<avatar_url>
+
+    'avatar_url' => 'http://pastebin.com/i/guest.gif',
+
+A string of text. The URL to the user's avatar picture.
+
+=head3 C<private> or C<unlisted>
+
+    'private' => '1',
+
+    'unlisted' => '1',
+
+True value, if exist. If C<private> key is present, user's default
+paste setting is to make the paste private. If C<unlisted> key is
+present, user's default paste setting is to make the paste unlisted.
+
+=head3 C<expiration>
+
+    'expiration' => 'N',
+
+User's default expiry setting for their pastes. The values
+you can possibly get here are these:
+
+    N = Never
+    10M = 10 Minutes
+    1H = 1 Hour
+    1D = 1 Day
+    1W = 1 Week
+    2W = 2 Weeks
+    1M = 1 Month 
+
+=head3 C<account_type>
+
+    'account_type' => '0',
+
+0 or 1 as a value. Indicates user's account type. 0 means it's a normal;
+1 means PRO.
 
 =head1 ACCESSOR METHODS
 

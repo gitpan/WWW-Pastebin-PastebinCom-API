@@ -7,7 +7,7 @@ use Test::More;
 
 use WWW::Pastebin::PastebinCom::API;
 
-plan tests => 20;
+plan tests => 22;
 
 my $API_KEY = 'a3767061e0e64fef6c266126f7e588f3';
 my $USER    = 'perlpaster';
@@ -16,6 +16,7 @@ my $PASS    = 'perlpaster';
 my $bin = create_and_test_object();
 test_get_paste( $bin );
 my $created_paste_url = test_creation_of_new_paste( $bin );
+test_get_user_info( $bin );
 test_list_trendy_pastes( $bin );
 SKIP: {
     defined $created_paste_url
@@ -24,6 +25,26 @@ SKIP: {
             7;
     test_list_user_pastes( $bin, $created_paste_url );
     test_delete_paste_and_error_method( $bin, $created_paste_url );
+}
+
+sub test_get_user_info {
+    diag("Testing get_user_info");
+    SKIP: {
+        my $bin = shift;
+        my $info = $bin->get_user_info
+            or skip "Got an error while getting user info: $bin", 2;
+
+        is( ref $info, 'HASH', 'Is info ref a hash?' );
+        my $all_hashrefs_have_proper_keys = 1;
+        for my $key ( qw/ name  website  location  format_short
+            avatar_url  email  expiration  account_type
+        /) {
+            $all_hashrefs_have_proper_keys = 0
+                unless exists $info->{ $key }
+        }
+        ok( $all_hashrefs_have_proper_keys == 1,
+                'Have all proper keys' );
+    }
 }
 
 sub test_delete_paste_and_error_method {

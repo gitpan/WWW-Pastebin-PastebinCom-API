@@ -16,7 +16,7 @@ name: WWW-Pastebin-PastebinCom-API
 provides:
   WWW::Pastebin::PastebinCom::API:
     file: lib/WWW/Pastebin/PastebinCom/API.pm
-    version: 0.001
+    version: 0.002
 requires:
   Carp: 1.32
   Class::Data::Accessor: 0.04004
@@ -26,4 +26,4 @@ requires:
   perl: 5.006
 resources:
   license: http://www.perlfoundation.org/artistic_license_2_0
-version: 0.001
+version: 0.002

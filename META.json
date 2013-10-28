@@ -38,7 +38,7 @@
    "provides" : {
       "WWW::Pastebin::PastebinCom::API" : {
          "file" : "lib/WWW/Pastebin/PastebinCom/API.pm",
-         "version" : "0.001"
+         "version" : "0.002"
       }
    },
    "release_status" : "stable",
@@ -47,5 +47,5 @@
          "http://www.perlfoundation.org/artistic_license_2_0"
       ]
    },
-   "version" : "0.001"
+   "version" : "0.002"
 }
