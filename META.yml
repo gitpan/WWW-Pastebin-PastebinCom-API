@@ -1,0 +1,29 @@
+---
+abstract: 'implementation of pastebin.com API'
+author:
+  - 'Zoffix Znet <zoffix@cpan.org>'
+build_requires:
+  Test::More: 0
+configure_requires:
+  Module::Build: 0
+dynamic_config: 1
+generated_by: 'Module::Build version 0.4007, CPAN::Meta::Converter version 2.132830'
+license: artistic_2
+meta-spec:
+  url: http://module-build.sourceforge.net/META-spec-v1.4.html
+  version: 1.4
+name: WWW-Pastebin-PastebinCom-API
+provides:
+  WWW::Pastebin::PastebinCom::API:
+    file: lib/WWW/Pastebin/PastebinCom/API.pm
+    version: 0.001
+requires:
+  Carp: 1.32
+  Class::Data::Accessor: 0.04004
+  HTTP::Cookies: 6
+  LWP::UserAgent: 6.03
+  overload: 1.13
+  perl: 5.006
+resources:
+  license: http://www.perlfoundation.org/artistic_license_2_0
+version: 0.001

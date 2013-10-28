@@ -1,0 +1,51 @@
+{
+   "abstract" : "implementation of pastebin.com API",
+   "author" : [
+      "Zoffix Znet <zoffix@cpan.org>"
+   ],
+   "dynamic_config" : 1,
+   "generated_by" : "Module::Build version 0.4007, CPAN::Meta::Converter version 2.132830",
+   "license" : [
+      "artistic_2"
+   ],
+   "meta-spec" : {
+      "url" : "http://search.cpan.org/perldoc?CPAN::Meta::Spec",
+      "version" : "2"
+   },
+   "name" : "WWW-Pastebin-PastebinCom-API",
+   "prereqs" : {
+      "build" : {
+         "requires" : {
+            "Test::More" : "0"
+         }
+      },
+      "configure" : {
+         "requires" : {
+            "Module::Build" : "0"
+         }
+      },
+      "runtime" : {
+         "requires" : {
+            "Carp" : "1.32",
+            "Class::Data::Accessor" : "0.04004",
+            "HTTP::Cookies" : "6",
+            "LWP::UserAgent" : "6.03",
+            "overload" : "1.13",
+            "perl" : "5.006"
+         }
+      }
+   },
+   "provides" : {
+      "WWW::Pastebin::PastebinCom::API" : {
+         "file" : "lib/WWW/Pastebin/PastebinCom/API.pm",
+         "version" : "0.001"
+      }
+   },
+   "release_status" : "stable",
+   "resources" : {
+      "license" : [
+         "http://www.perlfoundation.org/artistic_license_2_0"
+      ]
+   },
+   "version" : "0.001"
+}
