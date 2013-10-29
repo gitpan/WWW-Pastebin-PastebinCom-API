@@ -3,18 +3,18 @@ require 5.006;
 use ExtUtils::MakeMaker;
 WriteMakefile
 (
+  'PL_FILES' => {},
+  'INSTALLDIRS' => 'site',
   'NAME' => 'WWW::Pastebin::PastebinCom::API',
+  'EXE_FILES' => [],
   'VERSION_FROM' => 'lib/WWW/Pastebin/PastebinCom/API.pm',
   'PREREQ_PM' => {
-                   'Carp' => '1.32',
-                   'Class::Data::Accessor' => '0.04004',
-                   'HTTP::Cookies' => '6',
-                   'LWP::UserAgent' => '6.03',
                    'Test::More' => 0,
-                   'overload' => '1.13'
-                 },
-  'INSTALLDIRS' => 'site',
-  'EXE_FILES' => [],
-  'PL_FILES' => {}
+                   'LWP::UserAgent' => 0,
+                   'overload' => 0,
+                   'HTTP::Cookies' => 0,
+                   'Class::Data::Accessor' => 0,
+                   'Carp' => 0
+                 }
 )
 ;

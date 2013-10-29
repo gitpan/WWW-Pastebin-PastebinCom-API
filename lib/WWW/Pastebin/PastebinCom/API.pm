@@ -2,7 +2,7 @@ package WWW::Pastebin::PastebinCom::API;
 
 use strict;
 use warnings;
-our $VERSION = '0.002';
+our $VERSION = '0.003';
 use LWP::UserAgent;
 use Carp;
 use HTTP::Cookies;

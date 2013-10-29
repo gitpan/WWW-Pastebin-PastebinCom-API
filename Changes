@@ -1,5 +1,8 @@
 Revision history for WWW-Pastebin-PastebinCom-API
 
+0.003   2013-10-29
+        - Fixed a broken test
+
 0.002   2013-10-28
         - Added the "Getting A Users Information And Settings" API
           feature that I somehow managed to miss the first time around.

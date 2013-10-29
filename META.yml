@@ -16,14 +16,14 @@ name: WWW-Pastebin-PastebinCom-API
 provides:
   WWW::Pastebin::PastebinCom::API:
     file: lib/WWW/Pastebin/PastebinCom/API.pm
-    version: 0.002
+    version: 0.003
 requires:
-  Carp: 1.32
-  Class::Data::Accessor: 0.04004
-  HTTP::Cookies: 6
-  LWP::UserAgent: 6.03
-  overload: 1.13
+  Carp: 0
+  Class::Data::Accessor: 0
+  HTTP::Cookies: 0
+  LWP::UserAgent: 0
+  overload: 0
   perl: 5.006
 resources:
   license: http://www.perlfoundation.org/artistic_license_2_0
-version: 0.002
+version: 0.003
